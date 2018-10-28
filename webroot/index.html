@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div>
+    <input id="create" type="button" value="创建房间">
+    <p>房间号:<input id="num" type="text" title="房间号"></p>
+    <input id="join" type="button" value="加入房间">
+    <input id="start" type="button" value="开始">
+    <div id="last-message"></div>
+    <div id="last-pokers"></div>
+    <div id="pokers"></div>
+    <p>出牌:<input id="out" type="text" title="出牌"></p>
+    <input id="play" type="button" value="出牌">
+    <input id="jump" type="button" value="跳过">
+</div>
+
+</body>
+<script src="http://cdn.jsdelivr.net/sockjs/0.3.4/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vertx/3.5.4/vertx-eventbus.min.js"></script>
+<script>
+    var eb = new EventBus('/eventbus')
+    var canPlay
+    var register = function (homeName, playerID) {
+        eb.registerHandler(homeName, function (error, message) {
+            document.getElementById("last-message").innerHTML = message.body
+        });
+        eb.registerHandler(homeName + playerID + "_S", function (error, message) {
+            document.getElementById("last-pokers").innerHTML = message.body.lastPokers
+            document.getElementById("pokers").innerHTML = message.body.pokers
+            canPlay = message.body.canPlay
+        })
+    }
+    document.getElementById("create").addEventListener("click", function (ev) {
+        eb.send("home",
+            {"event": "create"},
+            function (error, mes) {
+                document.getElementById("num").value = JSON.stringify(mes).body.homeName
+                register(JSON.stringify(mes).body.homeName, JSON.stringify(mes).body.playerID)
+            })
+    })
+    document.getElementById("join").addEventListener("click", function (ev) {
+        eb.send("home",
+            {
+                "event": "join",
+                "num": document.getElementById("num").value
+            },
+            function (error, mes) {
+                register(JSON.stringify(mes).body.homeName, JSON.stringify(mes).body.playerID)
+            })
+    })
+    document.getElementById("start").addEventListener("click", function (ev) {
+        eb.send("home",
+            {
+                "event": "start",
+                "num": document.getElementById("num").value
+            })
+    })
+    document.getElementById("play").addEventListener("click", function (ev) {
+        eb.send(homeName + playerID + "_C",
+            {
+                "event": "play",
+                "pokers": document.getElementById("out").value
+            })
+    })
+    document.getElementById("jump").addEventListener("click", function (ev) {
+        eb.send(homeName + playerID + "_C", {
+            "event": "jump"
+        })
+    })
+
+</script>
+</html>

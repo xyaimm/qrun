@@ -3,7 +3,7 @@ package com.xyaimm.r1
 import java.util.*
 
 open class Player(val playerEvent: PlayerEvent) {
-    val pokers = mutableSetOf<Poker>()
+    val pokers = mutableListOf<Poker>()
     var lastPlaySize = 0
 
     fun isVictory() = pokers.isEmpty()
@@ -77,10 +77,25 @@ open class Player(val playerEvent: PlayerEvent) {
         return pokers.toString()
     }
 
-    fun waitPlay() {
-        Scanner(System.`in`).nextInt()
-        canPlay(listOf())
-        play(listOf())
+    fun waitPlay(lastPokers: Pokers) {
+        val str = Scanner(System.`in`).next()
+        if (!str.matches(Regex("^[0-9]{1,7}$"))) {
+            jump()
+            return
+        }
+        val li = str?.toCharArray()
+                ?.map { "$it".toInt() }?.map {
+                    pokers[it]
+                }
+                ?: listOf()
+        if (canPlay(li, lastPokers)) {
+            play(li)
+        } else {
+            println("不合法")
+            waitPlay(lastPokers)
+        }
+
+
     }
 
 

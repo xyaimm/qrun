@@ -1,17 +1,34 @@
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.2.61'
+    id 'application'
+    id 'com.github.johnrengelman.shadow' version '2.0.4'
 }
 
 group 'xyaimm'
 version '1.0-SNAPSHOT'
 
-repositories {
-    mavenCentral()
+ext {
+    vertxVersion = '3.5.4'
+    junitJupiterEngineVersion = '5.2.0'
 }
 
+repositories {
+    mavenCentral()
+    jcenter()
+}
+sourceCompatibility = '1.8'
+mainClassName = 'io.vertx.core.Launcher'
+
+def mainVerticleName = 'com.xyaimm.r1.MainVerticle'
+def watchForChange = 'src/**/*'
+def doOnChange = './gradlew classes'
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-    testCompile "org.junit.jupiter:junit-jupiter-api:RELEASE"
+    implementation "io.vertx:vertx-core:$vertxVersion"
+    implementation "io.vertx:vertx-web:$vertxVersion"
+    implementation "io.vertx:vertx-lang-kotlin:$vertxVersion"
+    testImplementation "io.vertx:vertx-junit5:$vertxVersion"
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:$junitJupiterEngineVersion")
 }
 
 compileKotlin {
@@ -19,4 +36,19 @@ compileKotlin {
 }
 compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'PASSED', 'FAILED', 'SKIPPED'
+    }
+}
+
+run {
+    args = ['run', mainVerticleName, "--redeploy=$watchForChange", "--launcher-class=$mainClassName", "--on-redeploy=$doOnChange"]
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.10'
 }

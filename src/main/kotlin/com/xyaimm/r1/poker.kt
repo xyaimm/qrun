@@ -120,6 +120,10 @@ sealed class Pokers(val pokers: Collection<Poker>) {
     }
 
     val size = pokers.size
+
+    override fun toString(): String {
+        return pokers.toString()
+    }
 }
 
 class PokersSingle(pokers: Collection<Poker>) : Pokers(pokers) {

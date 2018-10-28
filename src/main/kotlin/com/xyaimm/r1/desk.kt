@@ -6,31 +6,7 @@ import kotlin.math.min
 class Desk(val pokers: Set<Poker> = Pokers.all, private val playerNum: Int = 4) {
     private val remaining = LinkedList<Poker>()
     private val invalid = mutableSetOf<Poker>()
-    val players: List<Player> = (1..playerNum).map {
-        Player(object : PlayerEvent {
-            override fun play(player: Player, poker: Pokers) {
-                lastPlayer = player
-                lastPokers = poker
-                playCards(poker.pokers)
-                if (player.isVictory()) {
-                    println("$player is Victory")
-                } else {
-                    waitPlayer = getNextPlayer(player)
-                    waitPlay()
-                }
-            }
-
-            override fun jump(player: Player) {
-                waitPlayer = getNextPlayer(player)
-                if (waitPlayer == lastPlayer) {
-                    lastPokers = Pokers.create(listOf())
-                }
-                println("new :")
-                waitPlay()
-            }
-
-        })
-    }
+    val players = mutableListOf<Player>()
     private var waitPlayer: Player = players.first()
     private var lastPlayer: Player = players.first()
     private var lastPokers: Pokers = Pokers.create(listOf())
@@ -68,10 +44,41 @@ class Desk(val pokers: Set<Poker> = Pokers.all, private val playerNum: Int = 4) 
         }
         player.getCard(getPokers(1))
         waitPlayer = player
-        println("new :")
+        println("new:")
     }
 
     fun waitPlay() {
-        waitPlayer.waitPlay()
+        println("last:${lastPokers}\n${players.indexOf(waitPlayer)}:${waitPlayer.pokers.map { "[${waitPlayer.pokers.indexOf(it)}]$it" }}")
+        waitPlayer.waitPlay(lastPokers)
+    }
+
+    fun addPlayer(): Player {
+
+        val player = Player(object : PlayerEvent {
+            override fun play(player: Player, poker: Pokers) {
+                lastPlayer = player
+                lastPokers = poker
+                playCards(poker.pokers)
+                if (player.isVictory()) {
+                    println("$player is Victory")
+                } else {
+                    waitPlayer = getNextPlayer(player)
+                    waitPlay()
+                }
+            }
+
+            override fun jump(player: Player) {
+                waitPlayer = getNextPlayer(player)
+                if (waitPlayer == lastPlayer) {
+                    waitPlayer.getCard(getPokers(lastPokers.size))
+                    lastPokers = Pokers.create(listOf())
+                    println("new:")
+                }
+                waitPlay()
+            }
+
+        })
+        players.add(player)
+        return player
     }
 }
