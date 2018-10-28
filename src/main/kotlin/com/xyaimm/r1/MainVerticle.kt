@@ -44,12 +44,12 @@ class MainVerticle : AbstractVerticle() {
                 "create" -> {
                     desk = Desk()
                     homeMap[desk.hashCode()] = desk
-                    val palyer = desk.addPlayer()
+                    val palyer = desk.addPlayer(vertx)
                     message.reply(HomeRes(desk.hashCode(),palyer.hashCode()))
                 }
                 "join" -> {
                     desk = homeMap[message.body().num] ?: Desk()
-                    val palyer = desk.addPlayer()
+                    val palyer = desk.addPlayer(vertx)
                     message.reply(HomeRes(desk.hashCode(),palyer.hashCode()))
                 }
                 else -> {

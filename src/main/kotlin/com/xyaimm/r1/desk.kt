@@ -1,5 +1,6 @@
 package com.xyaimm.r1
 
+import io.vertx.core.Vertx
 import java.util.*
 import kotlin.math.min
 
@@ -52,7 +53,7 @@ class Desk(val pokers: Set<Poker> = Pokers.all, private val playerNum: Int = 4) 
         waitPlayer.waitPlay(lastPokers)
     }
 
-    fun addPlayer(): Player {
+    fun addPlayer(vertx: Vertx): Player {
 
         val player = Player(object : PlayerEvent {
             override fun play(player: Player, poker: Pokers) {
@@ -79,6 +80,11 @@ class Desk(val pokers: Set<Poker> = Pokers.all, private val playerNum: Int = 4) 
 
         })
         players.add(player)
+        var eb = vertx.eventBus()
+
+        eb.consumer<PlayMessage>("${hashCode() + player.hashCode()}_C", { message ->
+
+        })
         return player
     }
 }
