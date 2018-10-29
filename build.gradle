@@ -49,6 +49,16 @@ run {
     args = ['run', mainVerticleName, "--redeploy=$watchForChange", "--launcher-class=$mainClassName", "--on-redeploy=$doOnChange"]
 }
 
+shadowJar {
+    classifier = 'fat'
+    manifest {
+        attributes 'Main-Verticle': mainVerticleName
+    }
+    mergeServiceFiles {
+        include 'META-INF/services/io.vertx.core.spi.VerticleFactory'
+    }
+}
+
 task wrapper(type: Wrapper) {
     gradleVersion = '4.10'
 }

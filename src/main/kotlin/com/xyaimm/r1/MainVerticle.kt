@@ -2,6 +2,7 @@ package com.xyaimm.r1
 
 import io.vertx.core.AbstractVerticle
 import io.vertx.core.Future
+import io.vertx.core.json.JsonObject
 import io.vertx.ext.web.Router
 import io.vertx.ext.web.handler.StaticHandler
 import io.vertx.ext.web.handler.sockjs.SockJSHandler
@@ -16,7 +17,7 @@ class MainVerticle : AbstractVerticle() {
         var router = Router.router(vertx)
         var sockJSHandler = SockJSHandler.create(vertx)
         var inboundPermitted1 = PermittedOptions(
-                address = "a")
+                addressRegex = ".*")
         var options = BridgeOptions(
                 inboundPermitteds = listOf(inboundPermitted1),
                 outboundPermitteds = listOf(inboundPermitted1))
@@ -37,26 +38,30 @@ class MainVerticle : AbstractVerticle() {
         }
         var eb = vertx.eventBus()
 
-        var consumer = eb.consumer<HomeReq>("home")
-        consumer.handler { message ->
+        eb.consumer<JsonObject>("home") { message ->
             val desk: Desk
-            when (message.body().event) {
+            when (message.body().getString("event")) {
                 "create" -> {
-                    desk = Desk()
+                    desk = Desk(vertx)
                     homeMap[desk.hashCode()] = desk
-                    val palyer = desk.addPlayer(vertx)
-                    message.reply(HomeRes(desk.hashCode(),palyer.hashCode()))
+                    val palyer = desk.addPlayer(message.body().getString("name"))
+                    message.reply(JsonObject(mapOf("homeName" to "${desk.hashCode()}",
+                            "playerID" to "${palyer.hashCode()}")))
+                    eb.publish("${desk.hashCode()}", "${palyer.name}创建房间成功")
                 }
                 "join" -> {
-                    desk = homeMap[message.body().num] ?: Desk()
-                    val palyer = desk.addPlayer(vertx)
-                    message.reply(HomeRes(desk.hashCode(),palyer.hashCode()))
+                    desk = homeMap[message.body().getString("num").toInt()] ?: Desk(vertx)
+                    val palyer = desk.addPlayer(message.body().getString("name"))
+                    message.reply(JsonObject(mapOf("homeName" to "${desk.hashCode()}",
+                            "playerID" to "${palyer.hashCode()}")))
+                    eb.publish("${desk.hashCode()}", "${palyer.name}加入房间成功")
                 }
                 else -> {
-                    desk = homeMap[message.body().num] ?: Desk()
+                    desk = homeMap[message.body().getString("num").toInt()] ?: Desk(vertx)
                     desk.shuffle()
                     desk.fistGetPoker()
                     desk.waitPlay()
+                    eb.publish("${desk.hashCode()}", "开始游戏")
                 }
             }
 

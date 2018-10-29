@@ -1,10 +1,7 @@
 package com.xyaimm.r1
 
-import java.util.*
-
-open class Player(val playerEvent: PlayerEvent) {
+open class Player(val name: String, val playerEvent: PlayerEvent) {
     val pokers = mutableListOf<Poker>()
-    var lastPlaySize = 0
 
     fun isVictory() = pokers.isEmpty()
 
@@ -14,10 +11,9 @@ open class Player(val playerEvent: PlayerEvent) {
 
     fun play(poker: Collection<Poker>, strandFist: Int = 0): Pokers {
         pokers.removeAll(poker)
-        val pokers = Pokers.create(poker, strandFist)
-        playerEvent.play(this, pokers)
-        lastPlaySize = pokers.size
-        return pokers
+        val ps = Pokers.create(poker, strandFist)
+        playerEvent.play(this, ps)
+        return ps
 
     }
 
@@ -76,28 +72,6 @@ open class Player(val playerEvent: PlayerEvent) {
     override fun toString(): String {
         return pokers.toString()
     }
-
-    fun waitPlay(lastPokers: Pokers) {
-        val str = Scanner(System.`in`).next()
-        if (!str.matches(Regex("^[0-9]{1,7}$"))) {
-            jump()
-            return
-        }
-        val li = str?.toCharArray()
-                ?.map { "$it".toInt() }?.map {
-                    pokers[it]
-                }
-                ?: listOf()
-        if (canPlay(li, lastPokers)) {
-            play(li)
-        } else {
-            println("不合法")
-            waitPlay(lastPokers)
-        }
-
-
-    }
-
 
 }
 
